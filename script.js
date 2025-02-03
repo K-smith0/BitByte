@@ -39,7 +39,19 @@ class player{
         this.position.dx=this.position.dx*0.9+this.position.ddx;
         this.position.dy=this.position.dy*0.9+this.position.ddy;
         this.position.x=this.position.x+this.position.dx;
-        //this.position.y=(this.position.y+this.position.dy>1000-this.h)?1000-this.h:this.position.y+this.position.dy;
+        this.position.y=(this.position.y+this.position.dy>1000-this.h)?1000-this.h:this.position.y+this.position.dy;
+        let temp=[];
+        Mapper.map.filter(x => ((this.position.x/50)-1<x.x && (this.position.x/50)+1>x.x && ((this.position.y+15-this.h)/50)-1<x.y && ((this.position.y-15+this.h)/50)+1>x.y && x.solid)).forEach(x => {
+            let dx = this.position.x-x.x*50;
+            let dy = this.position.y-x.y*50;
+            temp.push({horizontal:Math.abs(dx)>Math.abs(dy),value:Math.abs(dx)>Math.abs(dy)?dx:dy,object:x});
+        });
+        temp.forEach(x => {
+            console.log(x.object.x,x.value,this.position.x);
+            if(x.horizontal)this.position.x-=(50-x.value);
+            else this.position.y+=x.value/2;
+        });
+        //this.position.y=(Mapper.map.find(x=>x.x == Math.round((this.position.x+this.position.dx)/50) && x.y==Math.round((this.position.y+this.position.dy)/50)).solid)?this.position.y-30:this.position.y;
         this.position.dy=(this.position.y==1000-this.h)?0:this.position.dy;
         this.position.dx=(this.position.x==this.w || this.position.x==1000-this.w)?0:this.position.dx;
         //if(this.position.y==1000-this.h)this.grounded=true;
@@ -78,6 +90,23 @@ class map{
         });
         ctx.resetTransform();
     }
+    debugCollDraw(){
+        ctx.translate(500-p.position.x,500-p.position.y);
+        this.map.filter(x => (((p.position.x)/50)-1<x.x && ((p.position.x)/50)+1>x.x && ((p.position.y+15-p.h)/50)-1<x.y && ((p.position.y-15+p.h)/50)+1>x.y)).forEach(x => {
+            if(x.solid){
+            ctx.beginPath();
+            ctx.strokeStyle="red";
+            ctx.rect(x.x*50,x.y*50,25,-25);
+            ctx.rect(x.x*50,x.y*50,-25,-25);
+            ctx.rect(x.x*50,x.y*50,-25,25);
+            ctx.rect(x.x*50,x.y*50,25,25);
+            ctx.stroke();
+            ctx.strokeStyle="green";
+            ctx.closePath();
+        }
+        });
+        ctx.resetTransform();
+    }
 }
 let p = new player({x:500,y:500});
 let Mapper = new map();
@@ -91,4 +120,5 @@ setInterval(x => {
     ctx.clearRect(0,0,1000,1000);
     p.debugUpdate();
     Mapper.debugDraw();
+    Mapper.debugCollDraw();
 },16);
